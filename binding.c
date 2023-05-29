@@ -193,6 +193,35 @@ bare_signals_stop (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_signals_send (js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  uint32_t signum;
+  err = js_get_value_uint32(env, argv[0], &signum);
+  assert(err == 0);
+
+  uint32_t pid;
+  err = js_get_value_uint32(env, argv[1], &pid);
+  assert(err == 0);
+
+  err = uv_kill(pid, signum);
+
+  if (err < 0) {
+    js_throw_error(env, uv_err_name(err), uv_strerror(err));
+  }
+
+  return NULL;
+}
+
+static js_value_t *
 init (js_env_t *env, js_value_t *exports) {
 #define V(name, fn) \
   { \
@@ -204,6 +233,7 @@ init (js_env_t *env, js_value_t *exports) {
   V("close", bare_signals_close)
   V("start", bare_signals_start)
   V("stop", bare_signals_stop)
+  V("send", bare_signals_send)
 #undef V
 
 #define V(name) \

@@ -34,6 +34,14 @@ module.exports = exports = class Signal extends EventEmitter {
   }
 }
 
+exports.send = function send (signum, pid = process.pid) {
+  if (typeof signum === 'string' && signum in signals) {
+    signum = signals[signum]
+  }
+
+  binding.send(signum, pid)
+}
+
 const signals = exports.constants = {
   SIGHUP: binding.SIGHUP,
   SIGINT: binding.SIGINT,
