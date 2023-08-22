@@ -1,11 +1,17 @@
 const EventEmitter = require('events')
+const os = require('os')
 const binding = require('./binding')
+const errors = require('./lib/errors')
 
-module.exports = exports = class Signal extends EventEmitter {
+module.exports = class Signal extends EventEmitter {
   constructor (signum) {
     super()
 
-    if (typeof signum === 'string' && signum in signals) {
+    if (typeof signum === 'string') {
+      if (signum in signals === false) {
+        throw errors.UNKNOWN_SIGNAL('Unknown signal: ' + signum)
+      }
+
       signum = signals[signum]
     }
 
@@ -32,52 +38,10 @@ module.exports = exports = class Signal extends EventEmitter {
   close () {
     binding.close(this._handle)
   }
-}
 
-exports.send = function send (signum, pid = process.pid) {
-  if (typeof signum === 'string' && signum in signals) {
-    signum = signals[signum]
+  static send (signum, pid = process.pid) {
+    os.kill(pid, signum)
   }
-
-  binding.send(signum, pid)
 }
 
-const signals = exports.constants = {
-  SIGHUP: binding.SIGHUP,
-  SIGINT: binding.SIGINT,
-  SIGQUIT: binding.SIGQUIT,
-  SIGILL: binding.SIGILL,
-  SIGTRAP: binding.SIGTRAP,
-  SIGABRT: binding.SIGABRT,
-  SIGIOT: binding.SIGIOT,
-  SIGBUS: binding.SIGBUS,
-  SIGFPE: binding.SIGFPE,
-  SIGKILL: binding.SIGKILL,
-  SIGUSR1: binding.SIGUSR1,
-  SIGSEGV: binding.SIGSEGV,
-  SIGUSR2: binding.SIGUSR2,
-  SIGPIPE: binding.SIGPIPE,
-  SIGALRM: binding.SIGALRM,
-  SIGTERM: binding.SIGTERM,
-  SIGCHLD: binding.SIGCHLD,
-  SIGSTKFLT: binding.SIGSTKFLT,
-  SIGCONT: binding.SIGCONT,
-  SIGSTOP: binding.SIGSTOP,
-  SIGTSTP: binding.SIGTSTP,
-  SIGBREAK: binding.SIGBREAK,
-  SIGTTIN: binding.SIGTTIN,
-  SIGTTOU: binding.SIGTTOU,
-  SIGURG: binding.SIGURG,
-  SIGXCPU: binding.SIGXCPU,
-  SIGXFSZ: binding.SIGXFSZ,
-  SIGVTALRM: binding.SIGVTALRM,
-  SIGPROF: binding.SIGPROF,
-  SIGWINCH: binding.SIGWINCH,
-  SIGIO: binding.SIGIO,
-  SIGPOLL: binding.SIGPOLL,
-  SIGLOST: binding.SIGLOST,
-  SIGPWR: binding.SIGPWR,
-  SIGINFO: binding.SIGINFO,
-  SIGSYS: binding.SIGSYS,
-  SIGUNUSED: binding.SIGUNUSED
-}
+const signals = exports.constants = os.constants.signals
