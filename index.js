@@ -3,7 +3,7 @@ const os = require('os')
 const binding = require('./binding')
 const errors = require('./lib/errors')
 
-module.exports = class Signal extends EventEmitter {
+module.exports = exports = class Signal extends EventEmitter {
   constructor (signum) {
     super()
 
@@ -17,6 +17,9 @@ module.exports = class Signal extends EventEmitter {
 
     this._signum = signum
     this._handle = binding.init(this, this._onsignal, this._onclose)
+    this._closing = null
+
+    Signal._signals.add(this)
   }
 
   _onsignal () {
@@ -24,6 +27,8 @@ module.exports = class Signal extends EventEmitter {
   }
 
   _onclose () {
+    this._handle = null
+
     this.emit('close')
   }
 
@@ -36,8 +41,17 @@ module.exports = class Signal extends EventEmitter {
   }
 
   close () {
+    if (this._closing) return this._closing
+    this._closing = EventEmitter.once(this, 'close')
+
     binding.close(this._handle)
+
+    Signal._signals.delete(this)
+
+    return this._closing
   }
+
+  static _signals = new Set()
 
   static send (signum, pid = process.pid) {
     os.kill(pid, signum)
@@ -45,3 +59,10 @@ module.exports = class Signal extends EventEmitter {
 }
 
 const signals = exports.constants = os.constants.signals
+
+process
+  .on('exit', () => {
+    for (const signal of exports._signals) {
+      signal.close()
+    }
+  })
