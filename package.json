@@ -24,6 +24,10 @@
     "url": "https://github.com/holepunchto/bare-signals/issues"
   },
   "homepage": "https://github.com/holepunchto/bare-signals#readme",
+  "dependencies": {
+    "bare-events": "^2.0.0",
+    "bare-os": "^2.0.0"
+  },
   "devDependencies": {
     "brittle": "^3.2.1",
     "standard": "^17.0.0"

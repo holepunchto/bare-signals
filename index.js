@@ -1,9 +1,10 @@
-const EventEmitter = require('events')
-const os = require('os')
+/* global Bare */
+const EventEmitter = require('bare-events')
+const os = require('bare-os')
 const binding = require('./binding')
 const errors = require('./lib/errors')
 
-module.exports = exports = class Signal extends EventEmitter {
+const Signal = module.exports = exports = class Signal extends EventEmitter {
   constructor (signum) {
     super()
 
@@ -53,16 +54,16 @@ module.exports = exports = class Signal extends EventEmitter {
 
   static _signals = new Set()
 
-  static send (signum, pid = process.pid) {
+  static send (signum, pid = os.pid()) {
     os.kill(pid, signum)
   }
 }
 
 const signals = exports.constants = os.constants.signals
 
-process
+Bare
   .on('exit', () => {
-    for (const signal of exports._signals) {
+    for (const signal of Signal._signals) {
       signal.close()
     }
   })
