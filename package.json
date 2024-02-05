@@ -11,6 +11,9 @@
     "lib",
     "prebuilds"
   ],
+  "addon": {
+    "target": "bare_signals"
+  },
   "scripts": {
     "test": "standard && bare test.js"
   },
