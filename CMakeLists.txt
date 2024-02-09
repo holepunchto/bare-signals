@@ -7,7 +7,7 @@ include(bare)
 add_bare_module(bare_signals)
 
 target_sources(
-  bare_signals
+  ${bare_signals}
   PRIVATE
     binding.c
 )
