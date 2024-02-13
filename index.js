@@ -41,6 +41,14 @@ const Signal = module.exports = exports = class Signal extends EventEmitter {
     binding.stop(this._handle)
   }
 
+  ref () {
+    binding.ref(this._handle)
+  }
+
+  unref () {
+    binding.unref(this._handle)
+  }
+
   close () {
     if (this._closing) return this._closing
     this._closing = EventEmitter.once(this, 'close')
