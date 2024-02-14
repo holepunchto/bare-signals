@@ -69,9 +69,41 @@ const Signal = module.exports = exports = class Signal extends EventEmitter {
 
 const signals = exports.constants = os.constants.signals
 
+const wraps = new Map()
+
+function isSignal (event) {
+  return typeof event === 'string' && signals[event] !== undefined
+}
+
+function listenIfSignal (signum) {
+  if (isSignal(signum) && !wraps.has(signum)) {
+    const wrap = new Signal(signum)
+    wrap.unref()
+
+    wrap.on('signal', Bare.emit.bind(Bare, signum, signum))
+    wrap.start()
+
+    wraps.set(signum, wrap)
+  }
+}
+
+function unlistenIfSignal (signum) {
+  const wrap = wraps.get(signum)
+  if (wrap !== undefined && Bare.listenerCount(signum) === 0) {
+    wrap.close()
+    wraps.delete(signum)
+  }
+}
+
 Bare
   .on('exit', () => {
     for (const signal of Signal._signals) {
       signal.close()
     }
   })
+
+Bare
+  .on('newListener', listenIfSignal)
+
+Bare
+  .on('removeListener', unlistenIfSignal)

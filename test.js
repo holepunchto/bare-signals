@@ -1,3 +1,4 @@
+/* global Bare */
 const test = require('brittle')
 const Signal = require('.')
 
@@ -17,4 +18,18 @@ test('catch SIGINT', (t) => {
     .start()
 
   Signal.send('SIGINT')
+})
+
+test('listen SIGINT', async (t) => {
+  t.plan(1)
+  const signum = 'SIGINT'
+
+  function onsig () {
+    Bare.removeListener(signum, onsig)
+    t.pass('listened')
+  }
+
+  Bare.prependListener(signum, onsig)
+
+  Bare.emit(signum)
 })
