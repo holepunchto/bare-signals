@@ -67,7 +67,10 @@ const Signal = module.exports = exports = class Signal extends EventEmitter {
   }
 }
 
+exports.Emitter = require('./lib/emitter')
+
 const signals = exports.constants = os.constants.signals
+exports.errors = errors
 
 Bare
   .on('exit', () => {

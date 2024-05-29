@@ -13,7 +13,7 @@ typedef struct {
 } bare_signal_t;
 
 static void
-on_signal (uv_signal_t *uv_handle, int signum) {
+bare_signals__on_signal (uv_signal_t *uv_handle, int signum) {
   int err;
 
   bare_signal_t *handle = (bare_signal_t *) uv_handle;
@@ -39,7 +39,7 @@ on_signal (uv_signal_t *uv_handle, int signum) {
 }
 
 static void
-on_close (uv_handle_t *uv_handle) {
+bare_signals__on_close (uv_handle_t *uv_handle) {
   int err;
 
   bare_signal_t *handle = (bare_signal_t *) uv_handle;
@@ -131,7 +131,7 @@ bare_signals_close (js_env_t *env, js_callback_info_t *info) {
   err = js_get_arraybuffer_info(env, argv[0], (void **) &handle, NULL);
   assert(err == 0);
 
-  uv_close((uv_handle_t *) handle, on_close);
+  uv_close((uv_handle_t *) handle, bare_signals__on_close);
 
   return NULL;
 }
@@ -156,7 +156,7 @@ bare_signals_start (js_env_t *env, js_callback_info_t *info) {
   err = js_get_value_int32(env, argv[1], &signum);
   assert(err == 0);
 
-  err = uv_signal_start((uv_signal_t *) handle, on_signal, signum);
+  err = uv_signal_start((uv_signal_t *) handle, bare_signals__on_signal, signum);
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
@@ -235,13 +235,18 @@ bare_signals_unref (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-init (js_env_t *env, js_value_t *exports) {
+bare_signals_exports (js_env_t *env, js_value_t *exports) {
+  int err;
+
 #define V(name, fn) \
   { \
     js_value_t *val; \
-    js_create_function(env, name, -1, fn, NULL, &val); \
-    js_set_named_property(env, exports, name, val); \
+    err = js_create_function(env, name, -1, fn, NULL, &val); \
+    assert(err == 0); \
+    err = js_set_named_property(env, exports, name, val); \
+    assert(err == 0); \
   }
+
   V("init", bare_signals_init)
   V("close", bare_signals_close)
   V("start", bare_signals_start)
@@ -253,4 +258,4 @@ init (js_env_t *env, js_value_t *exports) {
   return exports;
 }
 
-BARE_MODULE(bare_signals, init)
+BARE_MODULE(bare_signals, bare_signals_exports)

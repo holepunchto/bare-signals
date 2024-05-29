@@ -2,7 +2,12 @@
   "name": "bare-signals",
   "version": "2.1.2",
   "description": "Native signal handling for JavaScript",
-  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package": "./package.json",
+    "./errors": "./lib/errors.js",
+    "./emitter": "./lib/emitter.js"
+  },
   "files": [
     "index.js",
     "binding.c",
