@@ -38,6 +38,7 @@ const Signal = module.exports = exports = class Signal extends EventEmitter {
   }
 
   stop () {
+    if (this._closing) return
     binding.stop(this._handle)
   }
 

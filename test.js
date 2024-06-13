@@ -51,3 +51,10 @@ test('emitter with unknown signal', async (t) => {
 
   await t.exception(() => emitter.once('foo', () => {}), /Unknown signal: foo/)
 })
+
+test('stop after close', async (t) => {
+  const signal = new Signal('SIGINT')
+
+  signal.close()
+  signal.stop()
+})
