@@ -1,6 +1,6 @@
 {
   "name": "bare-signals",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Native signal handling for JavaScript",
   "exports": {
     ".": "./index.js",
