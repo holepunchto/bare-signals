@@ -32,7 +32,7 @@
   "homepage": "https://github.com/holepunchto/bare-signals#readme",
   "dependencies": {
     "bare-events": "^2.0.0",
-    "bare-os": "^2.0.0"
+    "bare-os": "^3.0.1"
   },
   "devDependencies": {
     "brittle": "^3.2.1",
