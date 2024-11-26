@@ -8,14 +8,12 @@ npm i bare-signals
 
 ## Usage
 
-``` js
+```js
 const Signal = require('bare-signals')
 
 const sigint = new Signal('SIGINT')
 
-sigint
-  .on('signal', () => console.log('SIGINT caught'))
-  .start()
+sigint.on('signal', () => console.log('SIGINT caught')).start()
 ```
 
 ## License

@@ -13,7 +13,7 @@ typedef struct {
 } bare_signal_t;
 
 static void
-bare_signals__on_signal (uv_signal_t *uv_handle, int signum) {
+bare_signals__on_signal(uv_signal_t *uv_handle, int signum) {
   int err;
 
   bare_signal_t *handle = (bare_signal_t *) uv_handle;
@@ -39,7 +39,7 @@ bare_signals__on_signal (uv_signal_t *uv_handle, int signum) {
 }
 
 static void
-bare_signals__on_close (uv_handle_t *uv_handle) {
+bare_signals__on_close(uv_handle_t *uv_handle) {
   int err;
 
   bare_signal_t *handle = (bare_signal_t *) uv_handle;
@@ -74,7 +74,7 @@ bare_signals__on_close (uv_handle_t *uv_handle) {
 }
 
 static js_value_t *
-bare_signals_init (js_env_t *env, js_callback_info_t *info) {
+bare_signals_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 3;
@@ -116,7 +116,7 @@ bare_signals_init (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_signals_close (js_env_t *env, js_callback_info_t *info) {
+bare_signals_close(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -137,7 +137,7 @@ bare_signals_close (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_signals_start (js_env_t *env, js_callback_info_t *info) {
+bare_signals_start(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 2;
@@ -167,7 +167,7 @@ bare_signals_start (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_signals_stop (js_env_t *env, js_callback_info_t *info) {
+bare_signals_stop(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -193,7 +193,7 @@ bare_signals_stop (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_signals_ref (js_env_t *env, js_callback_info_t *info) {
+bare_signals_ref(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -214,7 +214,7 @@ bare_signals_ref (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_signals_unref (js_env_t *env, js_callback_info_t *info) {
+bare_signals_unref(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 1;
@@ -235,7 +235,7 @@ bare_signals_unref (js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
-bare_signals_exports (js_env_t *env, js_value_t *exports) {
+bare_signals_exports(js_env_t *env, js_value_t *exports) {
   int err;
 
 #define V(name, fn) \
