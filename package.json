@@ -30,6 +30,9 @@
     "url": "https://github.com/holepunchto/bare-signals/issues"
   },
   "homepage": "https://github.com/holepunchto/bare-signals#readme",
+  "engines": {
+    "bare": ">=1.7.0"
+  },
   "dependencies": {
     "bare-events": "^2.0.0",
     "bare-os": "^3.0.1"
