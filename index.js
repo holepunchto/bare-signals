@@ -4,80 +4,67 @@ const os = require('bare-os')
 const binding = require('./binding')
 const errors = require('./lib/errors')
 
-const Signal =
-  (module.exports =
-  exports =
-    class Signal extends EventEmitter {
-      constructor(signum) {
-        super()
+const signals = os.constants.signals
 
-        if (typeof signum === 'string') {
-          if (signum in signals === false) {
-            throw errors.UNKNOWN_SIGNAL('Unknown signal: ' + signum)
-          }
+module.exports = exports = class Signal extends EventEmitter {
+  constructor(signum) {
+    super()
 
-          signum = signals[signum]
-        }
-
-        this._signum = signum
-        this._handle = binding.init(this, this._onsignal, this._onclose)
-        this._closing = null
-
-        Signal._signals.add(this)
+    if (typeof signum === 'string') {
+      if (signum in signals === false) {
+        throw errors.UNKNOWN_SIGNAL('Unknown signal: ' + signum)
       }
 
-      _onsignal() {
-        this.emit('signal', this._signum)
-      }
+      signum = signals[signum]
+    }
 
-      _onclose() {
-        this._handle = null
+    this._signum = signum
+    this._handle = binding.init(this, this._onsignal, this._onclose)
+    this._closing = null
+  }
 
-        this.emit('close')
-      }
+  _onsignal() {
+    this.emit('signal', this._signum)
+  }
 
-      start() {
-        binding.start(this._handle, this._signum)
-      }
+  _onclose() {
+    this._handle = null
 
-      stop() {
-        if (this._closing) return
-        binding.stop(this._handle)
-      }
+    this.emit('close')
+  }
 
-      ref() {
-        binding.ref(this._handle)
-      }
+  start() {
+    binding.start(this._handle, this._signum)
+  }
 
-      unref() {
-        binding.unref(this._handle)
-      }
+  stop() {
+    if (this._closing) return
+    binding.stop(this._handle)
+  }
 
-      close() {
-        if (this._closing) return this._closing
-        this._closing = EventEmitter.once(this, 'close')
+  ref() {
+    binding.ref(this._handle)
+  }
 
-        binding.close(this._handle)
+  unref() {
+    binding.unref(this._handle)
+  }
 
-        Signal._signals.delete(this)
+  close() {
+    if (this._closing) return this._closing
+    this._closing = EventEmitter.once(this, 'close')
 
-        return this._closing
-      }
+    binding.close(this._handle)
 
-      static _signals = new Set()
+    return this._closing
+  }
 
-      static send(signum, pid = os.pid()) {
-        os.kill(pid, signum)
-      }
-    })
+  static send(signum, pid = os.pid()) {
+    os.kill(pid, signum)
+  }
+}
 
 exports.Emitter = require('./lib/emitter')
 
-const signals = (exports.constants = os.constants.signals)
+exports.constants = signals
 exports.errors = errors
-
-Bare.on('exit', () => {
-  for (const signal of Signal._signals) {
-    signal.close()
-  }
-})

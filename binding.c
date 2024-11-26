@@ -4,32 +4,35 @@
 #include <uv.h>
 
 typedef struct {
-  uv_signal_t signal;
+  uv_signal_t handle;
 
   js_env_t *env;
   js_ref_t *ctx;
   js_ref_t *on_signal;
   js_ref_t *on_close;
+
+  js_deferred_teardown_t *teardown;
+  bool exiting;
 } bare_signal_t;
 
 static void
-bare_signals__on_signal(uv_signal_t *uv_handle, int signum) {
+bare_signals__on_signal(uv_signal_t *handle, int signum) {
   int err;
 
-  bare_signal_t *handle = (bare_signal_t *) uv_handle;
+  bare_signal_t *signal = (bare_signal_t *) handle;
 
-  js_env_t *env = handle->env;
+  js_env_t *env = signal->env;
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
 
   js_value_t *on_signal;
-  err = js_get_reference_value(env, handle->on_signal, &on_signal);
+  err = js_get_reference_value(env, signal->on_signal, &on_signal);
   assert(err == 0);
 
   js_value_t *ctx;
-  err = js_get_reference_value(env, handle->ctx, &ctx);
+  err = js_get_reference_value(env, signal->ctx, &ctx);
   assert(err == 0);
 
   js_call_function(env, ctx, on_signal, 0, NULL, NULL);
@@ -39,23 +42,25 @@ bare_signals__on_signal(uv_signal_t *uv_handle, int signum) {
 }
 
 static void
-bare_signals__on_close(uv_handle_t *uv_handle) {
+bare_signals__on_close(uv_handle_t *handle) {
   int err;
 
-  bare_signal_t *handle = (bare_signal_t *) uv_handle;
+  bare_signal_t *signal = (bare_signal_t *) handle;
 
-  js_env_t *env = handle->env;
+  js_env_t *env = signal->env;
+
+  if (signal->exiting) goto finalize;
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
 
   js_value_t *on_close;
-  err = js_get_reference_value(env, handle->on_close, &on_close);
+  err = js_get_reference_value(env, signal->on_close, &on_close);
   assert(err == 0);
 
   js_value_t *ctx;
-  err = js_get_reference_value(env, handle->ctx, &ctx);
+  err = js_get_reference_value(env, signal->ctx, &ctx);
   assert(err == 0);
 
   js_call_function(env, ctx, on_close, 0, NULL, NULL);
@@ -63,14 +68,27 @@ bare_signals__on_close(uv_handle_t *uv_handle) {
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 
-  err = js_delete_reference(env, handle->on_signal);
+finalize:
+  err = js_finish_deferred_teardown_callback(signal->teardown);
   assert(err == 0);
 
-  err = js_delete_reference(env, handle->on_close);
+  err = js_delete_reference(env, signal->on_signal);
   assert(err == 0);
 
-  err = js_delete_reference(env, handle->ctx);
+  err = js_delete_reference(env, signal->on_close);
   assert(err == 0);
+
+  err = js_delete_reference(env, signal->ctx);
+  assert(err == 0);
+}
+
+static void
+bare_signals__on_teardown(js_deferred_teardown_t *handle, void *data) {
+  bare_signal_t *signal = (bare_signal_t *) data;
+
+  signal->exiting = true;
+
+  uv_close((uv_handle_t *) &signal->handle, bare_signals__on_close);
 }
 
 static js_value_t *
@@ -85,34 +103,37 @@ bare_signals_init(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 3);
 
-  js_value_t *arraybuffer;
+  js_value_t *handle;
 
-  bare_signal_t *handle;
-  err = js_create_arraybuffer(env, sizeof(bare_signal_t), (void **) &handle, &arraybuffer);
+  bare_signal_t *signal;
+  err = js_create_arraybuffer(env, sizeof(bare_signal_t), (void **) &signal, &handle);
   if (err < 0) return NULL;
 
   uv_loop_t *loop;
   js_get_env_loop(env, &loop);
 
-  err = uv_signal_init(loop, (uv_signal_t *) handle);
+  err = uv_signal_init(loop, &signal->handle);
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
     return NULL;
   }
 
-  handle->env = env;
+  signal->env = env;
 
-  err = js_create_reference(env, argv[0], 1, &handle->ctx);
+  err = js_create_reference(env, argv[0], 1, &signal->ctx);
   assert(err == 0);
 
-  err = js_create_reference(env, argv[1], 1, &handle->on_signal);
+  err = js_create_reference(env, argv[1], 1, &signal->on_signal);
   assert(err == 0);
 
-  err = js_create_reference(env, argv[2], 1, &handle->on_close);
+  err = js_create_reference(env, argv[2], 1, &signal->on_close);
   assert(err == 0);
 
-  return arraybuffer;
+  err = js_add_deferred_teardown_callback(env, bare_signals__on_teardown, (void *) signal, &signal->teardown);
+  assert(err == 0);
+
+  return handle;
 }
 
 static js_value_t *
@@ -127,11 +148,11 @@ bare_signals_close(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_signal_t *handle;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &handle, NULL);
+  bare_signal_t *signal;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &signal, NULL);
   assert(err == 0);
 
-  uv_close((uv_handle_t *) handle, bare_signals__on_close);
+  uv_close((uv_handle_t *) &signal->handle, bare_signals__on_close);
 
   return NULL;
 }
@@ -148,15 +169,15 @@ bare_signals_start(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 2);
 
-  bare_signal_t *handle;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &handle, NULL);
+  bare_signal_t *signal;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &signal, NULL);
   assert(err == 0);
 
   int32_t signum;
   err = js_get_value_int32(env, argv[1], &signum);
   assert(err == 0);
 
-  err = uv_signal_start((uv_signal_t *) handle, bare_signals__on_signal, signum);
+  err = uv_signal_start(&signal->handle, bare_signals__on_signal, signum);
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
@@ -178,11 +199,11 @@ bare_signals_stop(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_signal_t *handle;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &handle, NULL);
+  bare_signal_t *signal;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &signal, NULL);
   assert(err == 0);
 
-  err = uv_signal_stop((uv_signal_t *) handle);
+  err = uv_signal_stop(&signal->handle);
 
   if (err < 0) {
     js_throw_error(env, uv_err_name(err), uv_strerror(err));
@@ -204,11 +225,11 @@ bare_signals_ref(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_signal_t *handle;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &handle, NULL);
+  bare_signal_t *signal;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &signal, NULL);
   assert(err == 0);
 
-  uv_ref((uv_handle_t *) handle);
+  uv_ref((uv_handle_t *) &signal->handle);
 
   return NULL;
 }
@@ -225,11 +246,11 @@ bare_signals_unref(js_env_t *env, js_callback_info_t *info) {
 
   assert(argc == 1);
 
-  bare_signal_t *handle;
-  err = js_get_arraybuffer_info(env, argv[0], (void **) &handle, NULL);
+  bare_signal_t *signal;
+  err = js_get_arraybuffer_info(env, argv[0], (void **) &signal, NULL);
   assert(err == 0);
 
-  uv_unref((uv_handle_t *) handle);
+  uv_unref((uv_handle_t *) &signal->handle);
 
   return NULL;
 }
