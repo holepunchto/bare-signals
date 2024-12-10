@@ -11,8 +11,10 @@ typedef struct {
   js_ref_t *on_signal;
   js_ref_t *on_close;
 
-  js_deferred_teardown_t *teardown;
+  bool closing;
   bool exiting;
+
+  js_deferred_teardown_t *teardown;
 } bare_signal_t;
 
 static void
@@ -20,6 +22,8 @@ bare_signals__on_signal(uv_signal_t *handle, int signum) {
   int err;
 
   bare_signal_t *signal = (bare_signal_t *) handle;
+
+  if (signal->exiting) return;
 
   js_env_t *env = signal->env;
 
@@ -49,7 +53,7 @@ bare_signals__on_close(uv_handle_t *handle) {
 
   js_env_t *env = signal->env;
 
-  if (signal->exiting) goto finalize;
+  js_deferred_teardown_t *teardown = signal->teardown;
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -63,15 +67,6 @@ bare_signals__on_close(uv_handle_t *handle) {
   err = js_get_reference_value(env, signal->ctx, &ctx);
   assert(err == 0);
 
-  js_call_function(env, ctx, on_close, 0, NULL, NULL);
-
-  err = js_close_handle_scope(env, scope);
-  assert(err == 0);
-
-finalize:
-  err = js_finish_deferred_teardown_callback(signal->teardown);
-  assert(err == 0);
-
   err = js_delete_reference(env, signal->on_signal);
   assert(err == 0);
 
@@ -80,6 +75,14 @@ finalize:
 
   err = js_delete_reference(env, signal->ctx);
   assert(err == 0);
+
+  if (!signal->exiting) js_call_function(env, ctx, on_close, 0, NULL, NULL);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+
+  err = js_finish_deferred_teardown_callback(teardown);
+  assert(err == 0);
 }
 
 static void
@@ -87,6 +90,8 @@ bare_signals__on_teardown(js_deferred_teardown_t *handle, void *data) {
   bare_signal_t *signal = (bare_signal_t *) data;
 
   signal->exiting = true;
+
+  if (signal->closing) return;
 
   uv_close((uv_handle_t *) &signal->handle, bare_signals__on_close);
 }
@@ -110,7 +115,8 @@ bare_signals_init(js_env_t *env, js_callback_info_t *info) {
   if (err < 0) return NULL;
 
   uv_loop_t *loop;
-  js_get_env_loop(env, &loop);
+  err = js_get_env_loop(env, &loop);
+  assert(err == 0);
 
   err = uv_signal_init(loop, &signal->handle);
 
@@ -120,6 +126,8 @@ bare_signals_init(js_env_t *env, js_callback_info_t *info) {
   }
 
   signal->env = env;
+  signal->closing = false;
+  signal->exiting = false;
 
   err = js_create_reference(env, argv[0], 1, &signal->ctx);
   assert(err == 0);
@@ -151,6 +159,8 @@ bare_signals_close(js_env_t *env, js_callback_info_t *info) {
   bare_signal_t *signal;
   err = js_get_arraybuffer_info(env, argv[0], (void **) &signal, NULL);
   assert(err == 0);
+
+  signal->closing = true;
 
   uv_close((uv_handle_t *) &signal->handle, bare_signals__on_close);
 
