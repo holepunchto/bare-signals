@@ -1,10 +1,19 @@
 import EventEmitter from 'bare-events'
+import os from 'bare-os'
 
-declare class Signal extends EventEmitter<{ close: []; signal: [number] }> {
-  static send(signum: number | string, pid?: number): void
+declare interface SignalEmitter extends EventEmitter<{ [signal: string]: [] }> {
+  ref(): void
+  unref(): void
+}
 
-  constructor(signum: number | string)
+declare class SignalEmitter {}
 
+declare class SignalError extends Error {
+  static UNKNOWN_SIGNAL(msg: string): SignalError
+}
+
+declare interface Signal
+  extends EventEmitter<{ close: []; signal: [signum: number] }> {
   close(): void
   ref(): void
   start(): void
@@ -12,19 +21,16 @@ declare class Signal extends EventEmitter<{ close: []; signal: [number] }> {
   unref(): void
 }
 
-declare class SignalEmitter extends EventEmitter<{ [name: string]: [] }> {
-  ref(): void
-  unref(): void
-}
+declare class Signal {
+  static send(signum: number | string, pid?: number): void
 
-declare class SignalError extends Error {
-  static UNKNOWN_SIGNAL(msg: string): SignalError
+  constructor(signum: number | string)
 }
 
 declare namespace Signal {
   export { SignalEmitter as Emitter, SignalError as errors }
 
-  export const constants: Record<string, number>
+  export const constants: typeof os.constants.signals
 }
 
 export = Signal
