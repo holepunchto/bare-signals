@@ -1,4 +1,3 @@
-/* global Bare */
 const EventEmitter = require('bare-events')
 const os = require('bare-os')
 const binding = require('./binding')
@@ -19,8 +18,8 @@ module.exports = exports = class Signal extends EventEmitter {
     }
 
     this._signum = signum
-    this._handle = binding.init(this, this._onsignal, this._onclose)
     this._closing = null
+    this._handle = binding.init(this, this._onsignal, this._onclose)
   }
 
   _onsignal() {
@@ -34,6 +33,7 @@ module.exports = exports = class Signal extends EventEmitter {
   }
 
   start() {
+    if (this._closing) throw errors.SIGNAL_CLOSED('Signal is closed')
     binding.start(this._handle, this._signum)
   }
 
@@ -43,10 +43,12 @@ module.exports = exports = class Signal extends EventEmitter {
   }
 
   ref() {
+    if (this._closing) return
     binding.ref(this._handle)
   }
 
   unref() {
+    if (this._closing) return
     binding.unref(this._handle)
   }
 

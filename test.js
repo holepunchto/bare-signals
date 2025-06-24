@@ -1,4 +1,3 @@
-/* global Bare */
 const test = require('brittle')
 const Signal = require('.')
 
@@ -57,4 +56,25 @@ test('stop after close', async (t) => {
 
   signal.close()
   signal.stop()
+})
+
+test('start after close', async (t) => {
+  const signal = new Signal('SIGINT')
+
+  signal.close()
+  await t.exception(() => signal.start())
+})
+
+test('ref after close', async (t) => {
+  const signal = new Signal('SIGINT')
+
+  signal.close()
+  signal.ref()
+})
+
+test('unref after close', async (t) => {
+  const signal = new Signal('SIGINT')
+
+  signal.close()
+  signal.unref()
 })
