@@ -11,7 +11,7 @@ module.exports = exports = class Signal extends EventEmitter {
 
     if (typeof signum === 'string') {
       if (signum in signals === false) {
-        throw errors.UNKNOWN_SIGNAL('Unknown signal: ' + signum)
+        throw errors.UNKNOWN_SIGNAL(`Unknown signal '${signum}'`)
       }
 
       signum = signals[signum]

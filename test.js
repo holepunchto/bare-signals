@@ -12,7 +12,7 @@ test('listen for SIGINT', async (t) => {
 })
 
 test('listen for unknown signal', async (t) => {
-  await t.exception(() => new Signal('foo'), /Unknown signal: foo/)
+  await t.exception(() => new Signal('foo'), /Unknown signal 'foo'/)
 })
 
 test('catch SIGINT', { skip: isWindows }, (t) => {
@@ -48,7 +48,7 @@ test('emitter with SIGINT', { skip: isWindows }, (t) => {
 test('emitter with unknown signal', async (t) => {
   const emitter = new Signal.Emitter()
 
-  await t.exception(() => emitter.once('foo', () => {}), /Unknown signal: foo/)
+  await t.exception(() => emitter.once('foo', () => {}), /Unknown signal 'foo'/)
 })
 
 test('stop after close', async (t) => {
