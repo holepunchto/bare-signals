@@ -1,24 +1,23 @@
 import EventEmitter from 'bare-events'
 import os from 'bare-os'
 
-declare interface SignalEmitter extends EventEmitter<{ [signal: string]: [] }> {
-  ref(): void
-  unref(): void
+interface SignalEmitter extends EventEmitter<{ [signal: string]: [] }> {
+  ref(): this
+  unref(): this
 }
 
 declare class SignalEmitter {}
 
 declare class SignalError extends Error {
-  static UNKNOWN_SIGNAL(msg: string): SignalError
+  readonly code: string
 }
 
-declare interface Signal
-  extends EventEmitter<{ close: []; signal: [signum: number] }> {
-  close(): void
-  ref(): void
-  start(): void
-  stop(): void
-  unref(): void
+interface Signal extends EventEmitter<{ close: []; signal: [signum: number] }> {
+  start(): this
+  stop(): this
+  ref(): this
+  unref(): this
+  close(): Promise<void>
 }
 
 declare class Signal {

@@ -22,34 +22,28 @@ module.exports = exports = class Signal extends EventEmitter {
     this._handle = binding.init(this, this._onsignal, this._onclose)
   }
 
-  _onsignal() {
-    this.emit('signal', this._signum)
-  }
-
-  _onclose() {
-    this._handle = null
-
-    this.emit('close')
-  }
-
   start() {
     if (this._closing) throw errors.SIGNAL_CLOSED('Signal is closed')
     binding.start(this._handle, this._signum)
+    return this
   }
 
   stop() {
-    if (this._closing) return
+    if (this._closing) return this
     binding.stop(this._handle)
+    return this
   }
 
   ref() {
-    if (this._closing) return
+    if (this._closing) return this
     binding.ref(this._handle)
+    return this
   }
 
   unref() {
-    if (this._closing) return
+    if (this._closing) return this
     binding.unref(this._handle)
+    return this
   }
 
   close() {
@@ -59,6 +53,16 @@ module.exports = exports = class Signal extends EventEmitter {
     binding.close(this._handle)
 
     return this._closing
+  }
+
+  _onsignal() {
+    this.emit('signal', this._signum)
+  }
+
+  _onclose() {
+    this._handle = null
+
+    this.emit('close')
   }
 
   static send(signum, pid = os.pid()) {
