@@ -38,8 +38,8 @@ test('emitter with SIGINT', { skip: isWindows }, (t) => {
 
   const emitter = new Signal.Emitter()
 
-  emitter.once('SIGINT', () => {
-    t.pass('caught')
+  emitter.once('SIGINT', (...args) => {
+    t.alike(args, ['SIGINT', 2])
   })
 
   Signal.send('SIGINT')
