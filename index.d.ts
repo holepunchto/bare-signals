@@ -1,8 +1,7 @@
 import EventEmitter from 'bare-events'
 import os from 'bare-os'
 
-interface SignalEmitter
-  extends EventEmitter<{ [signal: string]: [string, number] }> {
+interface SignalEmitter extends EventEmitter<{ [signal: string]: [string, number] }> {
   ref(): this
   unref(): this
 }
