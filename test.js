@@ -1,4 +1,5 @@
 const test = require('brittle')
+const os = require('bare-os')
 const Signal = require('.')
 
 const isWindows = Bare.platform === 'win32'
@@ -30,7 +31,7 @@ test('catch SIGINT', { skip: isWindows }, (t) => {
     })
     .start()
 
-  Signal.send('SIGINT')
+  os.kill(os.pid(), 'SIGINT')
 })
 
 test('emitter with SIGINT', { skip: isWindows }, (t) => {
@@ -42,7 +43,7 @@ test('emitter with SIGINT', { skip: isWindows }, (t) => {
     t.alike(args, ['SIGINT', 2])
   })
 
-  Signal.send('SIGINT')
+  os.kill(os.pid(), 'SIGINT')
 })
 
 test('emitter with unknown signal', async (t) => {

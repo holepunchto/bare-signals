@@ -1,9 +1,8 @@
 const EventEmitter = require('bare-events')
-const os = require('bare-os')
 const binding = require('./binding')
 const errors = require('./lib/errors')
 
-const signals = os.constants.signals
+const signals = binding.signals
 
 module.exports = exports = class Signal extends EventEmitter {
   constructor(signum) {
@@ -63,10 +62,6 @@ module.exports = exports = class Signal extends EventEmitter {
     this._handle = null
 
     this.emit('close')
-  }
-
-  static send(signum, pid = os.pid()) {
-    os.kill(pid, signum)
   }
 }
 
