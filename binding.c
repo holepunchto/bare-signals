@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <bare.h>
 #include <js.h>
+#include <signal.h>
 #include <uv.h>
 
 typedef struct {
@@ -284,6 +285,135 @@ bare_signals_exports(js_env_t *env, js_value_t *exports) {
   V("stop", bare_signals_stop)
   V("ref", bare_signals_ref)
   V("unref", bare_signals_unref)
+#undef V
+
+  js_value_t *signals;
+  err = js_create_object(env, &signals);
+  assert(err == 0);
+
+  err = js_set_named_property(env, exports, "signals", signals);
+  assert(err == 0);
+
+#define V(name) \
+  { \
+    js_value_t *val; \
+    err = js_create_uint32(env, name, &val); \
+    assert(err == 0); \
+    err = js_set_named_property(env, signals, #name, val); \
+    assert(err == 0); \
+  }
+
+#ifdef SIGHUP
+  V(SIGHUP);
+#endif
+#ifdef SIGINT
+  V(SIGINT);
+#endif
+#ifdef SIGQUIT
+  V(SIGQUIT);
+#endif
+#ifdef SIGILL
+  V(SIGILL);
+#endif
+#ifdef SIGTRAP
+  V(SIGTRAP);
+#endif
+#ifdef SIGABRT
+  V(SIGABRT);
+#endif
+#ifdef SIGIOT
+  V(SIGIOT);
+#endif
+#ifdef SIGBUS
+  V(SIGBUS);
+#endif
+#ifdef SIGFPE
+  V(SIGFPE);
+#endif
+#ifdef SIGKILL
+  V(SIGKILL);
+#endif
+#ifdef SIGUSR1
+  V(SIGUSR1);
+#endif
+#ifdef SIGSEGV
+  V(SIGSEGV);
+#endif
+#ifdef SIGUSR2
+  V(SIGUSR2);
+#endif
+#ifdef SIGPIPE
+  V(SIGPIPE);
+#endif
+#ifdef SIGALRM
+  V(SIGALRM);
+#endif
+#ifdef SIGTERM
+  V(SIGTERM);
+#endif
+#ifdef SIGCHLD
+  V(SIGCHLD);
+#endif
+#ifdef SIGSTKFLT
+  V(SIGSTKFLT);
+#endif
+#ifdef SIGCONT
+  V(SIGCONT);
+#endif
+#ifdef SIGSTOP
+  V(SIGSTOP);
+#endif
+#ifdef SIGTSTP
+  V(SIGTSTP);
+#endif
+#ifdef SIGBREAK
+  V(SIGBREAK);
+#endif
+#ifdef SIGTTIN
+  V(SIGTTIN);
+#endif
+#ifdef SIGTTOU
+  V(SIGTTOU);
+#endif
+#ifdef SIGURG
+  V(SIGURG);
+#endif
+#ifdef SIGXCPU
+  V(SIGXCPU);
+#endif
+#ifdef SIGXFSZ
+  V(SIGXFSZ);
+#endif
+#ifdef SIGVTALRM
+  V(SIGVTALRM);
+#endif
+#ifdef SIGPROF
+  V(SIGPROF);
+#endif
+#ifdef SIGWINCH
+  V(SIGWINCH);
+#endif
+#ifdef SIGIO
+  V(SIGIO);
+#endif
+#ifdef SIGPOLL
+  V(SIGPOLL);
+#endif
+#ifdef SIGLOST
+  V(SIGLOST);
+#endif
+#ifdef SIGPWR
+  V(SIGPWR);
+#endif
+#ifdef SIGINFO
+  V(SIGINFO);
+#endif
+#ifdef SIGSYS
+  V(SIGSYS);
+#endif
+#ifdef SIGUNUSED
+  V(SIGUNUSED);
+#endif
 #undef V
 
   return exports;

@@ -1,5 +1,4 @@
 import EventEmitter from 'bare-events'
-import os from 'bare-os'
 
 interface SignalEmitter extends EventEmitter<{ [signal: string]: [string, number] }> {
   ref(): this
@@ -21,15 +20,13 @@ interface Signal extends EventEmitter<{ close: []; signal: [signum: number] }> {
 }
 
 declare class Signal {
-  static send(signum: number | string, pid?: number): void
-
   constructor(signum: number | string)
 }
 
 declare namespace Signal {
   export { SignalEmitter as Emitter, SignalError as errors }
 
-  export const constants: typeof os.constants.signals
+  export const constants: Record<string, number>
 }
 
 export = Signal
