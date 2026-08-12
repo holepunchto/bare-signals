@@ -22,4 +22,4 @@ Apache-2.0
 
 ## API
 
-See the [full API reference](https://docs.pears.com/reference/bare/modules/bare-signals).
+See the [`bare-signals` reference](https://docs.pears.com/reference/bare/modules/bare-signals).
