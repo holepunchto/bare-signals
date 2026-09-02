@@ -16,6 +16,10 @@ const sigint = new Signal('SIGINT')
 sigint.on('signal', () => console.log('SIGINT caught')).start()
 ```
 
+## API
+
+See the [`bare-signals` reference](https://docs.pears.com/reference/bare/modules/bare-signals).
+
 ## License
 
 Apache-2.0
